@@ -8,13 +8,22 @@ pub fn main() {
     let input = read_input_file("two");
 
     println!("Part one: {}", part_one(&input));
+    println!("Part two: {}", part_two(&input));
 }
 
 fn part_one(input: &str) -> usize {
     input
         .lines()
         .map(PasswordEntry::parse)
-        .filter(|password| password.is_valid())
+        .filter(|password| password.is_valid_v1())
+        .count()
+}
+
+fn part_two(input: &str) -> usize {
+    input
+        .lines()
+        .map(PasswordEntry::parse)
+        .filter(|password| password.is_valid_v2())
         .count()
 }
 
@@ -46,10 +55,23 @@ impl<'a> PasswordEntry<'a> {
         }
     }
 
-    pub fn is_valid(&self) -> bool {
+    pub fn is_valid_v1(&self) -> bool {
         let count = self.password.chars().filter(|&c| c == self.letter).count();
 
         count >= self.min_occurs && count <= self.max_occurs
+    }
+
+    pub fn is_valid_v2(&self) -> bool {
+        let mut chars = self.password.chars();
+
+        let a = chars.nth(self.min_occurs - 1).unwrap();
+        let b = chars.nth(self.max_occurs - (self.min_occurs + 1)).unwrap();
+
+        if a == self.letter {
+            b != self.letter
+        } else {
+            b == self.letter
+        }
     }
 }
 
@@ -62,7 +84,12 @@ mod tests {
 2-9 c: ccccccccc";
 
     #[test]
-    fn solves_sample_input() {
+    fn sample_input_part_one() {
         assert_eq!(part_one(TEST_INPUT), 2);
+    }
+
+    #[test]
+    fn sample_input_part_two() {
+        assert_eq!(part_two(TEST_INPUT), 1);
     }
 }

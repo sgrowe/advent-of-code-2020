@@ -1,5 +1,5 @@
 [package]
-name = "advent-of-code-2020-2"
+name = "advent-of-code-2020"
 version = "0.1.0"
 authors = ["sam <sgrowe@live.co.uk>"]
 edition = "2018"
