@@ -1,4 +1,4 @@
-use super::utils::read_input_file;
+use super::utils::{capture_to_str, read_input_file};
 
 use regex::Regex;
 
@@ -9,6 +9,7 @@ pub fn main() {
 
     println!("Part one: {}", part_one(&input));
     println!("Part two: {}", part_two(&input));
+    println!();
 }
 
 fn part_one(input: &str) -> usize {
@@ -42,10 +43,10 @@ impl<'a> PasswordEntry<'a> {
 
         let captures = RE.captures(line).unwrap();
 
-        let min_occurs = captures.get(1).unwrap().as_str().parse().unwrap();
-        let max_occurs = captures.get(2).unwrap().as_str().parse().unwrap();
-        let letter = captures.get(3).unwrap().as_str().chars().next().unwrap();
-        let password = captures.get(4).unwrap().as_str();
+        let min_occurs = capture_to_str(&captures, 1).parse().unwrap();
+        let max_occurs = capture_to_str(&captures, 2).parse().unwrap();
+        let letter = capture_to_str(&captures, 3).chars().next().unwrap();
+        let password = capture_to_str(&captures, 4);
 
         PasswordEntry {
             min_occurs,
