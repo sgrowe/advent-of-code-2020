@@ -6,7 +6,7 @@ pub fn main() {
     let input = read_input_file("five");
 
     println!("Part one: {}", part_one(&input));
-    // println!("Part two: {}", part_two(&input));
+    println!("Part two: {}", part_two(&input));
     println!();
 }
 
@@ -22,9 +22,27 @@ fn part_one(input: &str) -> u16 {
         .unwrap_or_default()
 }
 
-// fn part_two(input: &str) -> usize {
-//     10
-// }
+fn part_two(input: &str) -> usize {
+    let mut seats_taken = [false; 1024];
+
+    let seat_ids = input.lines().map(|l| {
+        let ticket = Ticket::parse(l);
+
+        ticket.seat_id() as usize
+    });
+
+    for id in seat_ids {
+        seats_taken[id] = true;
+    }
+
+    for id in 1..1023 {
+        if seats_taken[id - 1] && seats_taken[id + 1] && !seats_taken[id] {
+            return id;
+        }
+    }
+
+    panic!("Failed to find seat")
+}
 
 #[derive(Debug, Copy, Clone)]
 enum RowInstr {
