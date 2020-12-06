@@ -8,6 +8,6 @@ pub fn capture_to_str<'a>(captures: &Captures<'a>, x: usize) -> &'a str {
     captures.get(x).unwrap().as_str()
 }
 
-pub fn parse_ints(text: &str) -> Vec<u64> {
-    text.lines().map(|x| x.parse().unwrap()).collect()
+pub fn parse_ints<'a>(text: &'a str) -> impl Iterator<Item = u64> + 'a {
+    text.lines().map(|x| x.parse().unwrap())
 }
