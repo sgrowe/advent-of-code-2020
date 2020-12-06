@@ -18,11 +18,14 @@ fn part_one(input: &str) -> usize {
     for group in groups {
         let mut responses = [false; 26];
 
-        group.lines().flat_map(|l| l.chars()).for_each(|c| {
-            let i = (c as usize) - 97;
+        group
+            .chars()
+            .filter(|c| c.is_ascii_alphabetic())
+            .for_each(|c| {
+                let i = (c as usize) - 97;
 
-            responses[i] = true;
-        });
+                responses[i] = true;
+            });
 
         result += responses.iter().filter(|&x| *x).count();
     }
@@ -36,20 +39,23 @@ fn part_two(input: &str) -> usize {
     let mut result = 0;
 
     for group in groups {
-        let mut responses: [u16; 26] = [0; 26];
-        let mut num_responders = 0;
+        let mut responses: [u8; 26] = [0; 26];
+        let mut num_responders = 1;
 
-        for line in group.lines() {
-            num_responders += 1;
+        for c in group.chars() {
+            match c {
+                '\n' => {
+                    num_responders += 1;
+                }
+                _ => {
+                    let i = (c as usize) - 97;
 
-            for c in line.chars() {
-                let i = (c as usize) - 97;
-
-                responses[i] += 1;
+                    responses[i] += 1;
+                }
             }
         }
 
-        result += responses.iter().filter(|&x| *x == num_responders).count();
+        result += bytecount::naive_count_32(&responses, num_responders);
     }
 
     result
