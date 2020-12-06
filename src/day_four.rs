@@ -7,23 +7,27 @@ pub fn main() {
 
     let input = read_input_file("four");
 
-    println!("Part one: {}", part_one(&input));
-    println!("Part two: {}", part_two(&input));
+    let passports = parse_passports(&input);
+
+    println!("Part one: {}", part_one(&passports));
+    println!("Part two: {}", part_two(&passports));
     println!();
 }
 
-fn part_one(input: &str) -> usize {
-    input
-        .split("\n\n")
-        .map(Passport::parse)
+fn parse_passports(input: &str) -> Vec<Passport> {
+    input.split("\n\n").map(Passport::parse).collect()
+}
+
+fn part_one(passports: &[Passport]) -> usize {
+    passports
+        .iter()
         .filter(|passport| passport.is_valid())
         .count()
 }
 
-fn part_two(input: &str) -> usize {
-    input
-        .split("\n\n")
-        .map(Passport::parse)
+fn part_two(passports: &[Passport]) -> usize {
+    passports
+        .iter()
         .filter(|passport| passport.is_valid_v2())
         .count()
 }
@@ -34,14 +38,13 @@ struct Passport<'a> {
 
 impl<'a> Passport<'a> {
     pub fn parse(text: &'a str) -> Self {
-        let fields = text
-            .split_ascii_whitespace()
-            .map(|s| {
-                let (k, v) = s.split_at(s.find(':').unwrap());
+        let mut fields = HashMap::with_capacity(8);
 
-                (k, &v[1..])
-            })
-            .collect();
+        text.split_ascii_whitespace().for_each(|s| {
+            let (key, value) = split_key_value(s);
+
+            fields.insert(key, value);
+        });
 
         Passport { fields }
     }
@@ -106,10 +109,6 @@ impl<'a> Passport<'a> {
     }
 
     fn ecl_valid(&self) -> bool {
-        lazy_static! {
-            static ref HCL_RE: Regex = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
-        }
-
         self.fields
             .get("ecl")
             .map(|&s| matches!(s, "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth"))
@@ -122,6 +121,12 @@ impl<'a> Passport<'a> {
             .map(|&s| s.len() == 9 && s.chars().all(|c| c.is_ascii_digit()))
             .unwrap_or(false)
     }
+}
+
+fn split_key_value(pair: &str) -> (&str, &str) {
+    let (k, v) = pair.split_at(pair.find(':').unwrap());
+
+    (k, &v[1..])
 }
 
 #[cfg(test)]
@@ -146,7 +151,7 @@ iyr:2011 ecl:brn hgt:59in
 
     #[test]
     fn sample_input_part_one() {
-        assert_eq!(part_one(TEST_INPUT.trim()), 2);
+        assert_eq!(part_one(&parse_passports(TEST_INPUT.trim())), 2);
     }
 
     #[test]
@@ -168,7 +173,7 @@ pid:3556412378 byr:2007
 "
         .trim();
 
-        assert_eq!(part_two(invalid), 0);
+        assert_eq!(part_two(&parse_passports(invalid)), 0);
     }
 
     #[test]
@@ -189,6 +194,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 "
         .trim();
 
-        assert_eq!(part_two(valid), 4);
+        assert_eq!(part_two(&parse_passports(valid)), 4);
     }
 }

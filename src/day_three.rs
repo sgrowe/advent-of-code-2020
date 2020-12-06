@@ -5,22 +5,20 @@ pub fn main() {
 
     let input = read_input_file("three");
 
-    println!("Part one: {}", part_one(&input));
-    println!("Part two: {}", part_two(&input));
+    let map = Map::parse(&input);
+
+    println!("Part one: {}", part_one(&map));
+    println!("Part two: {}", part_two(&map));
     println!();
 }
 
-fn part_one(input: &str) -> usize {
-    let map = Map::parse(input);
-
+fn part_one(map: &Map) -> usize {
     map.toboggan_path(3, 1)
         .filter(|&point| point == Point::Tree)
         .count()
 }
 
-fn part_two(input: &str) -> usize {
-    let map = Map::parse(input);
-
+fn part_two(map: &Map) -> usize {
     let toboggans = [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
 
     let mut result = 1;
@@ -79,6 +77,7 @@ impl Map {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
 struct TobogganIterator<'a> {
     map: &'a Map,
     x: usize,
@@ -122,11 +121,15 @@ mod tests {
 
     #[test]
     fn sample_input_part_one() {
-        assert_eq!(part_one(TEST_INPUT.trim()), 7);
+        let map = Map::parse(TEST_INPUT.trim());
+
+        assert_eq!(part_one(&map), 7);
     }
 
     #[test]
     fn sample_input_part_two() {
-        assert_eq!(part_two(TEST_INPUT.trim()), 336);
+        let map = Map::parse(TEST_INPUT.trim());
+
+        assert_eq!(part_two(&map), 336);
     }
 }

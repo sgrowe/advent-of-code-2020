@@ -28,6 +28,7 @@ fn part_two(input: &str) -> usize {
         .count()
 }
 
+#[derive(Debug, Copy, Clone)]
 struct PasswordEntry<'a> {
     min_occurs: usize,
     max_occurs: usize,
