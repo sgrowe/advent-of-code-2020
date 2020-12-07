@@ -8,7 +8,7 @@ pub fn main() {
     let bags = Bags::parse(&input);
 
     println!("Part one: {}", bags.num_gold_bag_containers());
-    // println!("Part two: {}", part_two(&passports));
+    println!("Part two: {}", bags.bags_within_bag("shiny gold"));
     println!();
 }
 
@@ -41,21 +41,17 @@ impl<'a> Bags<'a> {
     }
 
     pub fn num_gold_bag_containers(&self) -> usize {
-        let mut gold_bag_containers = HashMap::with_capacity(self.bags.len());
+        let mut gold_bags_per_bag = HashMap::with_capacity(self.bags.len());
 
-        let mut result = 0;
-
-        for bag in self.bags.keys() {
-            if self.gold(bag, &mut gold_bag_containers) > 0 {
-                result += 1;
-            }
-        }
-
-        result
+        self.bags
+            .keys()
+            .map(|bag| self.gold(bag, &mut gold_bags_per_bag))
+            .filter(|&x| x > 0)
+            .count()
     }
 
-    fn gold(&self, bag: &'a str, mut cache: &mut HashMap<&'a str, usize>) -> usize {
-        cache.get(bag).copied().unwrap_or_else(|| {
+    fn gold(&self, bag: &'a str, mut gold_bags_per_bag: &mut HashMap<&'a str, usize>) -> usize {
+        gold_bags_per_bag.get(bag).copied().unwrap_or_else(|| {
             let gold_bags = self.bags[bag]
                 .iter()
                 .map(|&(count, inner_bag)| {
@@ -63,15 +59,32 @@ impl<'a> Bags<'a> {
                         return count;
                     }
 
-                    let gold_bags = count * self.gold(inner_bag, &mut cache);
+                    let gold_bags = count * self.gold(inner_bag, &mut gold_bags_per_bag);
 
-                    cache.insert(inner_bag, gold_bags);
+                    gold_bags_per_bag.insert(inner_bag, gold_bags);
 
                     gold_bags
                 })
                 .sum();
 
             gold_bags
+        })
+    }
+
+    pub fn bags_within_bag(&self, bag: &str) -> usize {
+        let mut bags_per_bag: HashMap<&str, usize> = HashMap::with_capacity(self.bags.len());
+
+        self.num_bags_with_bag(bag, &mut bags_per_bag)
+    }
+
+    fn num_bags_with_bag(&self, bag: &str, mut bags_per_bag: &mut HashMap<&str, usize>) -> usize {
+        bags_per_bag.get(bag).copied().unwrap_or_else(|| {
+            self.bags[bag]
+                .iter()
+                .map(|(count, inner_bag)| {
+                    count * (1 + self.num_bags_with_bag(inner_bag, &mut bags_per_bag))
+                })
+                .sum()
         })
     }
 }
@@ -112,5 +125,30 @@ dotted black bags contain no other bags.
         let bags = Bags::parse(TEST_INPUT.trim());
 
         assert_eq!(bags.num_gold_bag_containers(), 4);
+    }
+
+    #[test]
+    fn sample_input_part_two() {
+        let bags = Bags::parse(TEST_INPUT.trim());
+
+        assert_eq!(bags.bags_within_bag("shiny gold"), 32);
+    }
+
+    #[test]
+    fn second_sample_input_part_two() {
+        let input = "
+shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain 2 dark yellow bags.
+dark yellow bags contain 2 dark green bags.
+dark green bags contain 2 dark blue bags.
+dark blue bags contain 2 dark violet bags.
+dark violet bags contain no other bags.
+"
+        .trim();
+
+        let bags = Bags::parse(input);
+
+        assert_eq!(bags.bags_within_bag("shiny gold"), 126);
     }
 }
