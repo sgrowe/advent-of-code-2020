@@ -1,11 +1,9 @@
-use super::utils::{capture_to_str, read_input_file};
+use super::utils::{capture_to_str, start_day};
 
 use regex::Regex;
 
 pub fn main() {
-    println!("Day two");
-
-    let input = read_input_file("two");
+    let input = start_day("two");
 
     println!("Part one: {}", part_one(&input));
     println!("Part two: {}", part_two(&input));

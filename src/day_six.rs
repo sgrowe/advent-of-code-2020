@@ -1,9 +1,7 @@
-use super::utils::read_input_file;
+use super::utils::start_day;
 
 pub fn main() {
-    println!("Day six");
-
-    let input = read_input_file("six");
+    let input = start_day("six");
 
     println!("Part one: {}", part_one(&input));
     println!("Part two: {}", part_two(&input));

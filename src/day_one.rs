@@ -1,9 +1,7 @@
-use super::utils::{parse_ints, read_input_file};
+use super::utils::{parse_ints, start_day};
 
 pub fn main() {
-    println!("Day one");
-
-    let input = read_input_file("one");
+    let input = start_day("one");
 
     let numbers: Vec<u64> = parse_ints(&input).collect();
 

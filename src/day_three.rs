@@ -1,9 +1,7 @@
-use super::utils::read_input_file;
+use super::utils::start_day;
 
 pub fn main() {
-    println!("Day three");
-
-    let input = read_input_file("three");
+    let input = start_day("three");
 
     let map = Map::parse(&input);
 

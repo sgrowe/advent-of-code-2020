@@ -1,11 +1,9 @@
-use super::utils::read_input_file;
+use super::utils::start_day;
 use regex::Regex;
 use std::collections::HashMap;
 
 pub fn main() {
-    println!("Day four");
-
-    let input = read_input_file("four");
+    let input = start_day("four");
 
     let passports = parse_passports(&input);
 
