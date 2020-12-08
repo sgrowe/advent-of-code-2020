@@ -1,5 +1,4 @@
 use super::utils::start_day;
-use regex::Regex;
 use std::collections::HashMap;
 
 pub fn main() {
@@ -72,17 +71,12 @@ impl<'a> Passport<'a> {
     }
 
     fn height_valid(&self) -> bool {
-        lazy_static! {
-            static ref HGT_RE: Regex = Regex::new(r"^(\d+)(cm|in)$").unwrap();
-        }
-
         self.fields
             .get("hgt")
             .and_then(|s| {
-                let captures = HGT_RE.captures(s)?;
+                let (num, unit) = s.split_at(s.len() - 2);
 
-                let num: u32 = captures.get(1)?.as_str().parse().ok()?;
-                let unit = captures.get(2)?.as_str();
+                let num: u64 = num.parse().ok()?;
 
                 let valid = match unit {
                     "cm" => num >= 150 && num <= 193,
@@ -96,13 +90,13 @@ impl<'a> Passport<'a> {
     }
 
     fn hcl_valid(&self) -> bool {
-        lazy_static! {
-            static ref HCL_RE: Regex = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
-        }
-
         self.fields
             .get("hcl")
-            .map(|s| HCL_RE.is_match(s))
+            .and_then(|&s| {
+                let mut chars = s.chars();
+
+                Some(s.len() == 7 && chars.next()? == '#' && chars.all(|c| c.is_ascii_hexdigit()))
+            })
             .unwrap_or(false)
     }
 

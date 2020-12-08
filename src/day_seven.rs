@@ -1,5 +1,4 @@
-use super::utils::{capture_to_str, start_day};
-use regex::Regex;
+use super::utils::start_day;
 use std::collections::HashMap;
 
 pub fn main() {
@@ -89,17 +88,23 @@ impl<'a> Bags<'a> {
     }
 }
 
-fn parse_inner_bags(s: &str) -> Vec<(usize, &str)> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(\d+) (\w+ \w+) bags?").unwrap();
-    }
+fn parse_inner_bags(list: &str) -> Vec<(usize, &str)> {
+    list.split(',')
+        .map(|list| {
+            let list = list.trim_start();
 
-    RE.captures_iter(s)
-        .map(|cap| {
-            let num = capture_to_str(&cap, 1).parse().unwrap();
-            let bag_type = capture_to_str(&cap, 2);
+            let mut spaces = list.match_indices(' ');
 
-            (num, bag_type)
+            let num_end = spaces.next().unwrap().0;
+
+            let num = list[..num_end].parse().unwrap();
+
+            spaces.next();
+            let bag_end = spaces.next().unwrap().0;
+
+            let bag_name = &list[num_end + 1..bag_end];
+
+            (num, bag_name)
         })
         .collect()
 }

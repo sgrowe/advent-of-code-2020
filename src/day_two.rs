@@ -1,6 +1,4 @@
-use super::utils::{capture_to_str, start_day};
-
-use regex::Regex;
+use super::utils::{get_text_up_to, start_day};
 
 pub fn main() {
     let input = start_day("two");
@@ -36,20 +34,15 @@ struct PasswordEntry<'a> {
 
 impl<'a> PasswordEntry<'a> {
     pub fn parse(line: &'a str) -> Self {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(r"(\d+)-(\d+) (\w): (\w+)").unwrap();
-        }
+        let (min_occurs, line) = get_text_up_to(line, '-');
+        let (max_occurs, line) = get_text_up_to(line, ' ');
+        let letter = line.chars().next().unwrap();
 
-        let captures = RE.captures(line).unwrap();
-
-        let min_occurs = capture_to_str(&captures, 1).parse().unwrap();
-        let max_occurs = capture_to_str(&captures, 2).parse().unwrap();
-        let letter = capture_to_str(&captures, 3).chars().next().unwrap();
-        let password = capture_to_str(&captures, 4);
+        let password = &line[3..];
 
         PasswordEntry {
-            min_occurs,
-            max_occurs,
+            min_occurs: min_occurs.parse().unwrap(),
+            max_occurs: max_occurs.parse().unwrap(),
             letter,
             password,
         }
