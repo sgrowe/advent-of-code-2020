@@ -1,16 +1,19 @@
 use super::pairs::Pairs;
 use super::utils::{parse_ints, start_day};
+use std::cmp::Ordering;
 
 pub fn main() {
     let input = start_day("nine");
 
-    println!("Part one: {}", part_one(&mut [0; 25], &input));
-    // println!("Part two: {}", part_two(&input));
+    let ints: Vec<u64> = parse_ints(&input).collect();
+
+    println!("Part one: {}", first_invalid_number(&mut [0; 25], &ints));
+    println!("Part two: {}", part_two(&mut [0; 25], &ints));
     println!();
 }
 
-fn part_one(mut prev_nums: &mut [u64], input: &str) -> u64 {
-    for (i, x) in parse_ints(input).enumerate() {
+fn first_invalid_number(mut prev_nums: &mut [u64], input: &[u64]) -> u64 {
+    for (i, &x) in input.iter().enumerate() {
         if i < prev_nums.len() {
             prev_nums[i] = x;
         } else {
@@ -35,13 +38,40 @@ fn append_item(window: &mut [u64], x: u64) {
     window[end] = x;
 }
 
+fn part_two(mut prev_nums: &mut [u64], input: &[u64]) -> u64 {
+    let invalid = first_invalid_number(&mut prev_nums, input);
+
+    for i in 0.. {
+        let mut sum = input[i];
+
+        for j in i + 1.. {
+            sum += input[j];
+
+            match sum.cmp(&invalid) {
+                Ordering::Greater => {
+                    break;
+                }
+                Ordering::Equal => {
+                    let range = &input[i..j + 1];
+
+                    let min = range.iter().min().unwrap();
+                    let max = range.iter().max().unwrap();
+
+                    return min + max;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    panic!("Solution not found");
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn sample_input_part_one() {
-        let input = "
+    const SAMPLE_INPUT: &str = "
 35
 20
 15
@@ -64,7 +94,11 @@ mod tests {
 576
 ";
 
-        assert_eq!(part_one(&mut [0; 5], input.trim()), 127);
+    #[test]
+    fn sample_input_part_one() {
+        let input: Vec<_> = parse_ints(SAMPLE_INPUT.trim()).collect();
+
+        assert_eq!(first_invalid_number(&mut [0; 5], &input), 127);
     }
 
     #[test]
@@ -99,6 +133,15 @@ mod tests {
 65
 ";
 
-        assert_eq!(part_one(&mut [0; 25], input.trim()), 65);
+        let input: Vec<_> = parse_ints(input.trim()).collect();
+
+        assert_eq!(first_invalid_number(&mut [0; 25], &input), 65);
+    }
+
+    #[test]
+    fn sample_input_part_two() {
+        let input: Vec<_> = parse_ints(SAMPLE_INPUT.trim()).collect();
+
+        assert_eq!(part_two(&mut [0; 5], &input), 62);
     }
 }
