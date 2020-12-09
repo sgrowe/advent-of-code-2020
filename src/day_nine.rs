@@ -41,25 +41,28 @@ fn append_item(window: &mut [u64], x: u64) {
 fn part_two(mut prev_nums: &mut [u64], input: &[u64]) -> u64 {
     let invalid = first_invalid_number(&mut prev_nums, input);
 
-    for i in 0.. {
-        let mut sum = input[i];
+    let mut i = 0;
+    let mut j = 1;
 
-        for j in i + 1.. {
-            sum += input[j];
+    let mut running_total = input[i] + input[j];
 
-            match sum.cmp(&invalid) {
-                Ordering::Greater => {
-                    break;
-                }
-                Ordering::Equal => {
-                    let range = &input[i..j + 1];
+    while j < input.len() {
+        match running_total.cmp(&invalid) {
+            Ordering::Greater => {
+                running_total -= input[i];
+                i += 1;
+            }
+            Ordering::Less => {
+                j += 1;
+                running_total += input[j];
+            }
+            Ordering::Equal => {
+                let range = &input[i..j];
 
-                    let min = range.iter().min().unwrap();
-                    let max = range.iter().max().unwrap();
+                let min = range.iter().min().unwrap();
+                let max = range.iter().max().unwrap();
 
-                    return min + max;
-                }
-                _ => {}
+                return min + max;
             }
         }
     }
