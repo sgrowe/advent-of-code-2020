@@ -1,23 +1,25 @@
 use super::utils::{parse_ints, start_day};
+use std::collections::HashMap;
 
 pub fn main() {
     let input = start_day("ten");
 
     let ints: Vec<usize> = parse_ints(&input).collect();
 
-    println!("Part one: {}", part_one(&ints));
+    let adapters = Adapters::from_ratings(&ints);
+
+    println!("Part one: {}", part_one(&adapters));
+    println!("Part two: {}", part_two(&adapters));
     println!();
 }
 
-fn part_one(input: &[usize]) -> usize {
+fn part_one(adapters: &Adapters) -> usize {
     let mut one_jolts_count = 0;
     let mut three_jolts_count = 0;
 
-    let adapters = Adapters::from_ratings(input);
-
     let mut prev_rating = 0;
 
-    for rating in adapters {
+    for rating in adapters.use_all_of_them() {
         match rating - prev_rating {
             1 => {
                 one_jolts_count += 1;
@@ -34,9 +36,38 @@ fn part_one(input: &[usize]) -> usize {
     one_jolts_count * three_jolts_count
 }
 
+fn part_two(adapters: &Adapters) -> usize {
+    let mut cache = HashMap::with_capacity(adapters.count);
+
+    num_valid_arrangements(adapters, 0, &mut cache)
+}
+
+fn num_valid_arrangements(
+    adapters: &Adapters,
+    i: usize,
+    mut cache: &mut HashMap<usize, usize>,
+) -> usize {
+    adapters
+        .valid_next_adapters(i)
+        .map(|x| {
+            if x == adapters.device_rating() {
+                return 1;
+            }
+
+            cache.get(&x).copied().unwrap_or_else(|| {
+                let count = num_valid_arrangements(adapters, x, &mut cache);
+
+                cache.insert(x, count);
+
+                count
+            })
+        })
+        .sum()
+}
+
 struct Adapters {
     adapters: Vec<bool>,
-    cur_rating: usize,
+    count: usize,
 }
 
 impl Adapters {
@@ -53,26 +84,43 @@ impl Adapters {
 
         Adapters {
             adapters,
+            count: ratings.len(),
+        }
+    }
+
+    pub fn use_all_of_them(&self) -> PartOneIterator {
+        PartOneIterator {
+            adapters: self,
             cur_rating: 0,
         }
     }
+
+    pub fn device_rating(&self) -> usize {
+        self.adapters.len() - 1
+    }
+
+    pub fn valid_next_adapters<'a>(&'a self, i: usize) -> impl Iterator<Item = usize> + 'a {
+        let next_min = i + 1;
+        let next_max = i + 3;
+
+        (next_min..=next_max).filter(move |&i| self.adapters.get(i).copied().unwrap_or_default())
+    }
 }
 
-impl Iterator for Adapters {
+struct PartOneIterator<'a> {
+    adapters: &'a Adapters,
+    cur_rating: usize,
+}
+
+impl<'a> Iterator for PartOneIterator<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next_min = self.cur_rating + 1;
-        let next_max = self.cur_rating + 3;
+        let next = self.adapters.valid_next_adapters(self.cur_rating).next()?;
 
-        for i in next_min..=next_max {
-            if *self.adapters.get(i)? {
-                self.cur_rating = i;
-                return Some(i);
-            }
-        }
+        self.cur_rating = next;
 
-        None
+        Some(next)
     }
 }
 
@@ -80,9 +128,7 @@ impl Iterator for Adapters {
 mod tests {
     use super::*;
 
-    #[test]
-    fn first_sample_input_part_one() {
-        let input = "
+    const FIRST_EXAMPLE: &str = "
 16
 10
 15
@@ -94,17 +140,9 @@ mod tests {
 6
 12
 4
-"
-        .trim();
+";
 
-        let ints: Vec<_> = parse_ints(&input).collect();
-
-        assert_eq!(part_one(&ints), 7 * 5);
-    }
-
-    #[test]
-    fn second_sample_input_part_one() {
-        let input = "
+    const SECOND_EXAMPLE: &str = "
 28
 33
 18
@@ -136,11 +174,33 @@ mod tests {
 34
 10
 3
-"
-        .trim();
+";
 
-        let ints: Vec<_> = parse_ints(&input).collect();
+    #[test]
+    fn first_sample_input_part_one() {
+        let ints: Vec<_> = parse_ints(FIRST_EXAMPLE.trim()).collect();
 
-        assert_eq!(part_one(&ints), 22 * 10);
+        assert_eq!(part_one(&Adapters::from_ratings(&ints)), 7 * 5);
+    }
+
+    #[test]
+    fn second_sample_input_part_one() {
+        let ints: Vec<_> = parse_ints(SECOND_EXAMPLE.trim()).collect();
+
+        assert_eq!(part_one(&Adapters::from_ratings(&ints)), 22 * 10);
+    }
+
+    #[test]
+    fn first_sample_input_part_two() {
+        let ints: Vec<_> = parse_ints(FIRST_EXAMPLE.trim()).collect();
+
+        assert_eq!(part_two(&Adapters::from_ratings(&ints)), 8);
+    }
+
+    #[test]
+    fn second_sample_input_part_two() {
+        let ints: Vec<_> = parse_ints(SECOND_EXAMPLE.trim()).collect();
+
+        assert_eq!(part_two(&Adapters::from_ratings(&ints)), 19208);
     }
 }
