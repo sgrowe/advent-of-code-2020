@@ -1,3 +1,6 @@
+use std::fmt::Debug;
+use std::str::FromStr;
+
 pub fn start_day(name: &str) -> String {
     println!("Day {}", name);
 
@@ -10,7 +13,11 @@ fn read_input_file(day_number: &str) -> String {
     std::fs::read_to_string(file_name).unwrap()
 }
 
-pub fn parse_ints<'a>(text: &'a str) -> impl Iterator<Item = u64> + 'a {
+pub fn parse_ints<'a, I, Err>(text: &'a str) -> impl Iterator<Item = I> + 'a
+where
+    I: FromStr<Err = Err>,
+    Err: Debug,
+{
     text.lines().map(|x| x.parse().unwrap())
 }
 
