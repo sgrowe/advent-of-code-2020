@@ -6,12 +6,18 @@ pub fn main() {
     let instr = Intructions::parse(&input);
 
     println!("Part one: {}", part_one(&instr));
-    // println!("Part two: {}", part_two(&instr));
+    println!("Part two: {}", part_two(&instr));
     println!();
 }
 
 fn part_one(instr: &Intructions) -> i64 {
-    let ship = instr.run();
+    let ship = instr.run(Ship::new());
+
+    ship.manhattan_distance()
+}
+
+fn part_two(instr: &Intructions) -> i64 {
+    let ship = instr.run(ShipWithWaypoint::new());
 
     ship.manhattan_distance()
 }
@@ -66,26 +72,6 @@ impl Ship {
         }
     }
 
-    pub fn update(&mut self, action: Action, amount: i64) {
-        match action {
-            Action::F => self.move_dir(self.dir, amount),
-            Action::L => {
-                for _ in 0..amount / 90 {
-                    self.rotate_left()
-                }
-            }
-            Action::R => {
-                for _ in 0..(360 - amount) / 90 {
-                    self.rotate_left()
-                }
-            }
-            Action::N => self.move_dir(Dir::North, amount),
-            Action::S => self.move_dir(Dir::South, amount),
-            Action::E => self.move_dir(Dir::East, amount),
-            Action::W => self.move_dir(Dir::West, amount),
-        }
-    }
-
     fn rotate_left(&mut self) {
         self.dir = match self.dir {
             Dir::North => Dir::West,
@@ -109,6 +95,93 @@ impl Ship {
     }
 }
 
+trait Moveable {
+    fn update(&mut self, action: Action, amount: i64);
+}
+
+impl Moveable for Ship {
+    fn update(&mut self, action: Action, amount: i64) {
+        match action {
+            Action::F => self.move_dir(self.dir, amount),
+            Action::L => {
+                for _ in 0..amount / 90 {
+                    self.rotate_left()
+                }
+            }
+            Action::R => {
+                for _ in 0..(360 - amount) / 90 {
+                    self.rotate_left()
+                }
+            }
+            Action::N => self.move_dir(Dir::North, amount),
+            Action::S => self.move_dir(Dir::South, amount),
+            Action::E => self.move_dir(Dir::East, amount),
+            Action::W => self.move_dir(Dir::West, amount),
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+struct ShipWithWaypoint {
+    ship: Ship,
+    waypoint: (i64, i64),
+}
+
+impl ShipWithWaypoint {
+    pub fn new() -> Self {
+        ShipWithWaypoint {
+            ship: Ship::new(),
+            waypoint: (10, 1),
+        }
+    }
+
+    pub fn manhattan_distance(&self) -> i64 {
+        self.ship.manhattan_distance()
+    }
+
+    fn move_waypoint(&mut self, dir: Dir, amount: i64) {
+        match dir {
+            Dir::North => self.waypoint.1 += amount,
+            Dir::East => self.waypoint.0 += amount,
+            Dir::South => self.waypoint.1 -= amount,
+            Dir::West => self.waypoint.0 -= amount,
+        }
+    }
+
+    fn rotate_waypoint_left(&mut self) {
+        let (x, y) = self.waypoint;
+
+        self.waypoint = (-y, x);
+    }
+}
+
+impl Moveable for ShipWithWaypoint {
+    fn update(&mut self, action: Action, amount: i64) {
+        match action {
+            Action::F => {
+                let (x, y) = self.waypoint;
+
+                self.ship.x += x * amount;
+                self.ship.y += y * amount;
+            }
+            Action::L => {
+                for _ in 0..amount / 90 {
+                    self.rotate_waypoint_left()
+                }
+            }
+            Action::R => {
+                for _ in 0..(360 - amount) / 90 {
+                    self.rotate_waypoint_left()
+                }
+            }
+            Action::N => self.move_waypoint(Dir::North, amount),
+            Action::S => self.move_waypoint(Dir::South, amount),
+            Action::E => self.move_waypoint(Dir::East, amount),
+            Action::W => self.move_waypoint(Dir::West, amount),
+        }
+    }
+}
+
 struct Intructions {
     instr: Vec<(Action, i64)>,
 }
@@ -128,9 +201,7 @@ impl Intructions {
         Intructions { instr }
     }
 
-    pub fn run(&self) -> Ship {
-        let mut ship = Ship::new();
-
+    pub fn run<S: Moveable>(&self, mut ship: S) -> S {
         for &(action, amount) in &self.instr {
             ship.update(action, amount);
         }
@@ -156,5 +227,12 @@ F11
         let instr = Intructions::parse(&EXAMPLE.trim());
 
         assert_eq!(part_one(&instr), 25);
+    }
+
+    #[test]
+    fn sample_input_part_two() {
+        let instr = Intructions::parse(&EXAMPLE.trim());
+
+        assert_eq!(part_two(&instr), 286);
     }
 }
