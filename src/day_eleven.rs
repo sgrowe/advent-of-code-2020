@@ -11,13 +11,13 @@ pub fn main() {
 }
 
 fn part_one(mut seats: SeatLayout) -> usize {
-    seats.run(false);
+    seats.run(SeatLayout::occupied_adjacent_seats, 4);
 
     seats.total_occupied_seats()
 }
 
 fn part_two(mut seats: SeatLayout) -> usize {
-    seats.run(true);
+    seats.run(SeatLayout::occupied_visible_seats, 5);
 
     seats.total_occupied_seats()
 }
@@ -39,7 +39,7 @@ impl Position {
         }
     }
 
-    pub fn next(&self, num_occupied_adjacent_seat: usize, tolerance: usize) -> Self {
+    pub fn update(&self, num_occupied_adjacent_seat: usize, tolerance: usize) -> Self {
         match (self, num_occupied_adjacent_seat) {
             (Position::Empty, 0) => Position::Filled,
             (Position::Empty, _) => Position::Empty,
@@ -65,38 +65,33 @@ impl SeatLayout {
         SeatLayout { seats }
     }
 
-    pub fn run(&mut self, v2: bool) {
-        let row = vec![0; self.seats[0].len()];
-        let mut num_occupied = vec![row; self.seats.len()];
+    pub fn run<F>(&mut self, num_occupied_seats: F, tolerance: usize)
+    where
+        F: Fn(&SeatLayout, usize, usize) -> usize,
+    {
+        let locations = self.seat_locations();
+
+        let row_len = self.seats[0].len();
+        let mut num_occupied = vec![0; self.seats.len() * row_len];
 
         loop {
-            for i in 0..self.seats.len() {
-                for j in 0..self.seats[0].len() {
-                    num_occupied[i][j] = if v2 {
-                        self.occupied_visible_seats(i, j)
-                    } else {
-                        self.occupied_adjacent_seats(i, j)
-                    };
+            for &(i, j) in &locations {
+                num_occupied[(i * row_len) + j] = num_occupied_seats(&self, i, j);
+            }
+
+            let mut has_changed = false;
+
+            for &(i, j) in &locations {
+                let old = self.seats[i][j];
+                let new = old.update(num_occupied[(i * row_len) + j], tolerance);
+
+                if old != new {
+                    has_changed = true;
+                    self.seats[i][j] = new;
                 }
             }
 
-            let mut changed_count: usize = 0;
-
-            for i in 0..self.seats.len() {
-                for j in 0..self.seats[0].len() {
-                    let tolerance = if v2 { 5 } else { 4 };
-
-                    let old = self.get(i, j).unwrap();
-                    let new = old.next(num_occupied[i][j], tolerance);
-
-                    if old != new {
-                        changed_count += 1;
-                        self.seats[i][j] = new;
-                    }
-                }
-            }
-
-            if changed_count == 0 {
+            if !has_changed {
                 return;
             }
         }
@@ -105,8 +100,24 @@ impl SeatLayout {
     pub fn total_occupied_seats(&self) -> usize {
         self.seats
             .iter()
-            .map(|row| row.iter().filter(|&p| *p == Position::Filled).count())
-            .sum()
+            .flatten()
+            .filter(|&p| *p == Position::Filled)
+            .count()
+    }
+
+    fn seat_locations(&self) -> Vec<(usize, usize)> {
+        let mut seat_locations = Vec::new();
+
+        for i in 0..self.seats.len() {
+            for j in 0..self.seats[0].len() {
+                match self.seats[i][j] {
+                    Position::Floor => {}
+                    _ => seat_locations.push((i, j)),
+                }
+            }
+        }
+
+        seat_locations
     }
 
     fn occupied_adjacent_seats(&self, i: usize, j: usize) -> usize {
