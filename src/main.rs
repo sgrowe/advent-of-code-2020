@@ -13,6 +13,7 @@ mod day_twelve;
 mod day_two;
 
 mod pairs;
+mod prime_factors;
 mod utils;
 
 fn main() {
