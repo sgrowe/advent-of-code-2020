@@ -23,6 +23,8 @@ fn part_one(buses: &BusSchedule) -> usize {
 fn part_two(buses: &BusSchedule) -> usize {
     let buses = buses.sorted_by_desc_id();
 
+    let bus_ids: Vec<_> = buses.iter().map(|bus| bus.id).collect();
+
     let first_bus = buses[0];
 
     let mut time = first_bus.id - first_bus.index;
@@ -33,7 +35,7 @@ fn part_two(buses: &BusSchedule) -> usize {
             time += step;
         }
 
-        let ids_so_far: Vec<_> = buses.iter().take(i + 1).map(|bus| bus.id).collect();
+        let ids_so_far = &bus_ids[..i + 1];
 
         step = lowest_common_multiple(&ids_so_far);
     }
