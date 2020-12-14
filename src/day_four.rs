@@ -37,11 +37,8 @@ impl<'a> Passport<'a> {
     pub fn parse(text: &'a str) -> Self {
         let mut fields = HashMap::with_capacity(8);
 
-        text.split_ascii_whitespace().for_each(|s| {
-            let (key, value) = split_key_value(s);
-
-            fields.insert(key, value);
-        });
+        let kv_pairs = text.split_ascii_whitespace().map(split_key_value);
+        fields.extend(kv_pairs);
 
         Passport { fields }
     }
