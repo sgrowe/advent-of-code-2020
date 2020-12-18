@@ -7,7 +7,7 @@ pub fn start_day(name: &str) -> String {
     read_input_file(name)
 }
 
-fn read_input_file(day_number: &str) -> String {
+pub fn read_input_file(day_number: &str) -> String {
     let file_name = format!("src/inputs/day_{}.txt", day_number);
 
     std::fs::read_to_string(file_name).unwrap()
@@ -25,4 +25,11 @@ pub fn get_text_up_to(s: &str, c: char) -> (&str, &str) {
     let end = s.find(c).unwrap();
 
     (&s[..end], &s[end + 1..])
+}
+
+pub fn first<I, X>(collection: I) -> X
+where
+    I: IntoIterator<Item = X>,
+{
+    collection.into_iter().next().unwrap()
 }
