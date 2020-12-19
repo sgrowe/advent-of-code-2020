@@ -62,7 +62,7 @@ fn get_number(mut tokens: &mut Tokeniser) -> u64 {
 fn eval_expr_v2(mut tokens: &mut Tokeniser) -> u64 {
     let mut value: u64 = get_number_v2(&mut tokens);
 
-    let mut multipliers = Vec::new();
+    let mut multiply_by = 1;
 
     while let Some(token) = tokens.next() {
         match token {
@@ -70,20 +70,17 @@ fn eval_expr_v2(mut tokens: &mut Tokeniser) -> u64 {
                 value += get_number_v2(&mut tokens);
             }
             Token::Multiply => {
-                multipliers.push(value);
+                multiply_by *= value;
                 value = get_number_v2(&mut tokens);
             }
             Token::CloseParen => {
-                let prod: u64 = multipliers.iter().product();
-
-                return value * prod;
+                return value * multiply_by;
             }
             _ => panic!(),
         }
     }
 
-    let prod: u64 = multipliers.iter().product();
-    value * prod
+    value * multiply_by
 }
 
 fn get_number_v2(mut tokens: &mut Tokeniser) -> u64 {
