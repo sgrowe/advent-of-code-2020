@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 bytecount = "0.6.2"
-
+tinyvec = "1.1.0"
 
 [dev-dependencies]
 test-case = "1.0.0"

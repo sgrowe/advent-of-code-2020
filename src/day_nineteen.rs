@@ -1,5 +1,6 @@
 use super::utils::{get_text_up_to, start_day};
 use std::collections::HashMap;
+use tinyvec::ArrayVec;
 
 pub fn main() {
     let input = start_day("nineteen");
@@ -8,8 +9,8 @@ pub fn main() {
 
     let rules = parse_rules(&mut lines);
 
-    println!("Part one: {}", part_one(&rules, lines));
-    // println!("Part two: {}", part_two(&input));
+    println!("Part one: {}", part_one(&rules, lines.clone()));
+    // println!("Part two: {}", part_two(rules, lines));
     println!();
 }
 
@@ -23,12 +24,11 @@ where
 #[derive(Debug, Copy, Clone)]
 enum Rule {
     Letter(char),
-    Single(u8),
-    Two([u8; 2]),
-    Three([u8; 3]),
-    EitherSingle(u8, u8),
-    Either([u8; 2], [u8; 2]),
+    Rules(RuleIds),
+    Either(RuleIds, RuleIds),
 }
+
+type RuleIds = ArrayVec<[u8; 3]>;
 
 impl Rule {
     pub fn parse(input: &str) -> Self {
@@ -40,27 +40,25 @@ impl Rule {
             return Rule::Letter(a.chars().nth(1).unwrap());
         }
 
-        let a = parse_int(a);
+        let mut rules = ArrayVec::new();
 
-        let b = match parts.next() {
-            Some("|") => {
-                let b = parse_int(parts.next().unwrap());
-                return Rule::EitherSingle(a, b);
+        rules.push(parse_int(a));
+
+        while let Some(rule) = parts.next() {
+            if rule == "|" {
+                let mut other_rules = ArrayVec::new();
+
+                for rule in parts {
+                    other_rules.push(parse_int(rule));
+                }
+
+                return Rule::Either(rules, other_rules);
             }
-            Some(b) => parse_int(b),
-            None => return Rule::Single(a),
-        };
 
-        match parts.next() {
-            Some("|") => {
-                let c = parse_int(parts.next().unwrap());
-                let d = parse_int(parts.next().unwrap());
-
-                Rule::Either([a, b], [c, d])
-            }
-            Some(x) => Rule::Three([a, b, parse_int(x)]),
-            None => Rule::Two([a, b]),
+            rules.push(parse_int(rule))
         }
+
+        Rule::Rules(rules)
     }
 }
 
@@ -114,35 +112,26 @@ impl Rules {
                     None
                 }
             }
-            Rule::Single(id) => self.match_length(msg, id, is_end),
-            Rule::Two(rules) => self.match_both(msg, rules, is_end),
-            Rule::Three([a, b, c]) => {
-                let mut i = self.match_length(msg, a, false)?;
+            Rule::Rules(rules) => self.match_many(msg, rules, is_end),
 
-                i += self.match_length(&msg[i..], b, false)?;
-
-                i += self.match_length(&msg[i..], c, is_end)?;
-
-                Some(i)
-            }
-            Rule::EitherSingle(a, b) => self
-                .match_length(msg, a, is_end)
-                .or_else(|| self.match_length(msg, b, is_end)),
-            Rule::Either(pair_a, pair_b) => {
-                let x = self.match_both(msg, pair_a, is_end);
-
-                x.or_else(|| self.match_both(msg, pair_b, is_end))
-            }
+            Rule::Either(rules_a, rules_b) => self
+                .match_many(msg, rules_a, is_end)
+                .or_else(|| self.match_many(msg, rules_b, is_end)),
         };
 
         res
     }
 
-    fn match_both(&self, msg: &str, [a, b]: [u8; 2], is_end: bool) -> Option<usize> {
-        let mut i = self.match_length(msg, a, false)?;
-        i += self.match_length(&msg[i..], b, is_end)?;
+    fn match_many(&self, msg: &str, rules: RuleIds, is_end: bool) -> Option<usize> {
+        let mut x = self.match_length(msg, rules[0], false)?;
 
-        Some(i)
+        for (i, &rule) in rules.iter().enumerate().skip(1) {
+            let is_last = i == (rules.len() - 1);
+
+            x += self.match_length(&msg[x..], rule, is_last && is_end)?;
+        }
+
+        Some(x)
     }
 }
 
