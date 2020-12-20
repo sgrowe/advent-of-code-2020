@@ -4,6 +4,7 @@ mod day_eleven;
 mod day_five;
 mod day_four;
 mod day_nine;
+mod day_nineteen;
 mod day_one;
 mod day_seven;
 mod day_seventeen;
@@ -34,4 +35,5 @@ fn main() {
     day_thirteen::main();
     day_seventeen::main();
     day_eighteen::main();
+    day_nineteen::main();
 }
