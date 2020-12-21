@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate tinyvec;
+
 mod day_eight;
 mod day_eighteen;
 mod day_eleven;
